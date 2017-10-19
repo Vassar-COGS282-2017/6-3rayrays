@@ -103,7 +103,7 @@ backprop <- function(input, target, input.to.hidden.weights, hidden.to.output.we
   # Step 5. Find the change in the hidden to output weights by applying the delta rule, using the
   # weighted error instead of the error.
   for(o in 1:n.output){
-    delta.hidden.to.output.weights[,o] <- learning.rate * output.weighted.error[o] * output.slope[o] * hidden.activation[o]
+    delta.hidden.to.output.weights[,o] <- learning.rate * output.weighted.error[o] * hidden.activation[o]
   }
   
   # Step 6. Now we need to "backpropogate" the error from the output nodes to the hidden nodes,
@@ -126,7 +126,7 @@ backprop <- function(input, target, input.to.hidden.weights, hidden.to.output.we
   
   # Step 8. Apply the delta rule using the weighted errors.
   for(h in 1:n.hidden){
-    delta.input.to.hidden.weights[,h] <- learning.rate * hidden.weighted.error[h] * hidden.slope[h] * input[h]
+    delta.input.to.hidden.weights[,h] <- learning.rate * hidden.weighted.error[h] * input[h]
   }
 
   
@@ -154,7 +154,7 @@ classification.correct <- function(input, target, input.to.hidden.weights, hidde
   result = FALSE
   activations <- forward.pass(input, input.to.hidden.weights, hidden.to.output.weights)
   output.activation <- activations$output
-  if(which(max(output.activation)) == which(target == 1)){
+  if(which(max(output.activation)== output.activation) == which(target == 1)){
     result = TRUE
   }
   return(result)
@@ -172,10 +172,10 @@ epoch <- function(epoch.train.size, epoch.test.size, input.to.hidden.weights, hi
   classification.acc <- 0
   for(t in sample(10000, epoch.test.size)){
     error <- error + test.pattern(testData[t,], testLabels[t,], input.to.hidden.weights, hidden.to.output.weights)
-    classification.acc <- classification.acc + classification.correct(testData[t,], testLabels[t,])
+    classification.acc <- classification.acc + classification.correct(testData[t,], testLabels[t,], input.to.hidden.weights, hidden.to.output.weights)
   }
   classification.acc <- classification.acc / epoch.test.size
-  return(list(error=error, classification.accuracy=classification.acc))
+  return(list(error=error, classification.accuracy=classification.acc, input.to.hidden.weights=input.to.hidden.weights, hidden.to.output.weights=hidden.to.output.weights))
 }
 
 # Run a batch of epochs
@@ -188,6 +188,8 @@ batch <- function(epochs){
   for(i in 1:epochs){
     result <- epoch(epoch.train.size, epoch.test.size, input.to.hidden.weights, hidden.to.output.weights)
     errors[i] <- result$error
+    input.to.hidden.weights <- result$input.to.hidden.weights
+    hidden.to.output.weights <- result$hidden.to.output.weights
     classifications[i] <- result$classification.accuracy
     setTxtProgressBar(pb, i)
   }
