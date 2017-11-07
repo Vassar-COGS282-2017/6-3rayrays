@@ -1,4 +1,4 @@
-source('load-mnist-data.R') # run this once, and then comment out to save processing time.
+#source('load-mnist-data.R') # run this once, and then comment out to save processing time.
 
 n.inputs <- 784 # The input images are 28x28, for a total of 784 pixels
 n.hidden <- 30 # Number of hidden layer nodes. You can adjust this parameter once you get the network working.
@@ -162,7 +162,7 @@ classification.correct <- function(input, target, input.to.hidden.weights, hidde
 
 # This function runs a single epoch, based on the epoch.train.size and epoch.test.size parameters
 # at the top of this file.
-epoch <- function(epoch.train.size, epoch.test.size, input.to.hidden.weights, hidden.to.output.weights){
+epoch <- function(input.to.hidden.weights, hidden.to.output.weights){
   for(t in sample(60000, epoch.train.size)){
     weights <- backprop(trainData[t,], trainLabels[t,], input.to.hidden.weights, hidden.to.output.weights)
     input.to.hidden.weights <- weights$input.to.hidden.weights
@@ -179,27 +179,22 @@ epoch <- function(epoch.train.size, epoch.test.size, input.to.hidden.weights, hi
 }
 
 # Run a batch of epochs
-batch <- function(epochs){
-  input.to.hidden.weights  <- matrix(rnorm(n.inputs*n.hidden,mean=0,sd=0.1), nrow=n.inputs, ncol=n.hidden)
-  hidden.to.output.weights <- matrix(rnorm(n.hidden*n.output,mean=0,sd=0.1), nrow=n.hidden, ncol=n.output)
+batch <- function(epochs, input.to.hidden.weights, hidden.to.output.weights){
   errors <- numeric(epochs)
   classifications <- numeric(epochs)
   pb <- txtProgressBar(min=0, max=epochs, style=3) 
   for(i in 1:epochs){
-    result <- epoch(epoch.train.size, epoch.test.size, input.to.hidden.weights, hidden.to.output.weights)
+    result <- epoch(input.to.hidden.weights, hidden.to.output.weights)
     errors[i] <- result$error
+    classifications[i] <- result$classification.accuracy
     input.to.hidden.weights <- result$input.to.hidden.weights
     hidden.to.output.weights <- result$hidden.to.output.weights
-    classifications[i] <- result$classification.accuracy
     setTxtProgressBar(pb, i)
   }
   return(data.frame(epoch=1:epochs, error=errors, accuracy=classifications))
 }
 
 # Uncomment these lines when you are ready to test the code.
-result <- batch(300)  # 300 epochs should be enough to reach >80% accuracy.
+result <- batch(300, input.to.hidden.weights, hidden.to.output.weights)  # 300 epochs should be enough to reach >80% accuracy.
 plot(result$accuracy) # plot the accuracy of the network over training (should increase).
 plot(result$error) # plot the error at the output layer over time (should decrease).
-
-# Try adjusting various parameters of the network (number of hidden layer nodes, learning rate) to see if you can improve learning. 
-
