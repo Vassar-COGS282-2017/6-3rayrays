@@ -1,4 +1,4 @@
-#source('load-mnist-data.R') # run this once, and then comment out to save processing time.
+source('load-mnist-data.R') # run this once, and then comment out to save processing time.
 
 n.inputs <- 784 # The input images are 28x28, for a total of 784 pixels
 n.hidden <- 30 # Number of hidden layer nodes. You can adjust this parameter once you get the network working.
@@ -97,13 +97,13 @@ backprop <- function(input, target, input.to.hidden.weights, hidden.to.output.we
   # Calculate a "weighted" error in two steps:
   # 1) Find the derivative (slope) for each output node at the level of activation of that node.
   # 2) Multiple this by the node's error to get the weighted error.
-  output.slope <- sapply(output.error, function(x){return(x * (1-x))})
+  output.slope <- sapply(output.activation, function(x){return(x * (1-x))})
   output.weighted.error <- output.slope*output.error
   
   # Step 5. Find the change in the hidden to output weights by applying the delta rule, using the
   # weighted error instead of the error.
   for(o in 1:n.output){
-    delta.hidden.to.output.weights[,o] <- learning.rate * output.weighted.error[o] * hidden.activation[o]
+    delta.hidden.to.output.weights[,o] <- learning.rate * output.weighted.error[o] * hidden.activation
   }
   
   # Step 6. Now we need to "backpropogate" the error from the output nodes to the hidden nodes,
@@ -116,17 +116,17 @@ backprop <- function(input, target, input.to.hidden.weights, hidden.to.output.we
   # error of the node.
   hidden.error <- 0
   for (j in 1:n.hidden){ # for j in 1:n.hidden
-    hidden.error[j] = sum(output.error*hidden.to.output.weights[j,])
+    hidden.error[j] = sum(output.weighted.error*hidden.to.output.weights[j,])
   }
 
   
   # Step 7. Just like the output layer, we need to calculate the weighted error for the hidden nodes.
-  hidden.slope <- sapply(hidden.error, function(x){return(x * (1-x))})
+  hidden.slope <- sapply(hidden.activation, function(x){return(x * (1-x))})
   hidden.weighted.error <- hidden.slope*hidden.error
   
   # Step 8. Apply the delta rule using the weighted errors.
   for(h in 1:n.hidden){
-    delta.input.to.hidden.weights[,h] <- learning.rate * hidden.weighted.error[h] * input[h]
+    delta.input.to.hidden.weights[,h] <- learning.rate * hidden.weighted.error[h] * input
   }
 
   
@@ -195,6 +195,6 @@ batch <- function(epochs, input.to.hidden.weights, hidden.to.output.weights){
 }
 
 # Uncomment these lines when you are ready to test the code.
-result <- batch(300, input.to.hidden.weights, hidden.to.output.weights)  # 300 epochs should be enough to reach >80% accuracy.
+result <- batch(50, input.to.hidden.weights, hidden.to.output.weights)  # 300 epochs should be enough to reach >80% accuracy.
 plot(result$accuracy) # plot the accuracy of the network over training (should increase).
 plot(result$error) # plot the error at the output layer over time (should decrease).
